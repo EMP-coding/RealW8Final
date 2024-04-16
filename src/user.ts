@@ -8,7 +8,7 @@ export class User {
     private cart: Item[];
 
     constructor(name: string, age: number) {
-        this.id = uuidv4();  // Unique ID for each user
+        this.id = uuidv4();  
         this.name = name;
         this.age = age;
         this.cart = [];
@@ -53,19 +53,19 @@ export class User {
     }
 
     removeQuantityFromCart(itemId: string, quantity: number): void {
-        console.log(`Attempting to remove ${quantity} from item ID ${itemId}`);
+        console.log(`Debugging: Trying to remove ${quantity} from item ID ${itemId}`);
         this.cart = this.cart.reduce((newCart: Item[], item) => {
             if (item.getId() === itemId) {
                 if (item.getQuantity() > quantity) {
                     item.setQuantity(item.getQuantity() - quantity);
                     newCart.push(item);
-                    console.log(`Decremented quantity. New quantity: ${item.getQuantity()}`);
+                    console.log(`Debugging: Decremented quantity. New quantity: ${item.getQuantity()}`);
                 } else {
-                    console.log(`Removing item as quantity is not greater than ${quantity}`);
-                    // Do not push the item if it needs to be removed entirely
+                    console.log(`Debugging: Removing item as quantity is not greater than ${quantity}`);
+                    
                 }
             } else {
-                newCart.push(item); // Keep all other items as is
+                newCart.push(item); 
             }
             return newCart;
         }, []);
@@ -74,7 +74,7 @@ export class User {
     }
 
     cartTotal(): number {
-        return this.cart.reduce((total, item) => total + item.getPrice(), 0);
+        return this.cart.reduce((total, item) => total + (item.getPrice() * item.getQuantity()), 0);
     }
 
     printCart(): void {
@@ -101,17 +101,33 @@ export class User {
     cartHTMLElement(): HTMLDivElement {
         const cartDiv = document.createElement('div');
         cartDiv.className = "cart-items";
+    
         this.cart.forEach(item => {
             const itemDiv = document.createElement('div');
             itemDiv.className = "cart-item";
             itemDiv.innerHTML = `<span>${item.getName()} (Quantity: ${item.getQuantity()}) - </span>
-                                <span>Price: $${item.getPrice().toFixed(2)}</span>
-                                <button class='remove-one-button' data-item-id='${item.getId()}'>Remove One</button>
-                                <button class='remove-all-button' data-item-id='${item.getId()}'>Remove All</button>`;
+                                 <span>Price: $${item.getPrice().toFixed(2)}</span>
+                                 <button class='remove-one-button' data-item-id='${item.getId()}'>Remove One</button>
+                                 <button class='remove-all-button' data-item-id='${item.getId()}'>Remove All</button>`;
             cartDiv.appendChild(itemDiv);
         });
-        document.querySelector('#cart')?.appendChild(cartDiv); // Ensure it appends to the correct place
-        this.addRemoveEventListeners(); // Add listeners immediately after rendering the cart
+    
+        // Add a div to display the cart total
+        const totalDiv = document.createElement('div');
+        totalDiv.className = "cart-total";
+        totalDiv.textContent = `Total: $${this.cartTotal().toFixed(2)}`;
+        cartDiv.appendChild(totalDiv);
+    
+        // Update the cart element in the DOM
+        const cartContainer = document.querySelector('#cart');
+        if (cartContainer) {
+            cartContainer.innerHTML = '';  // Clear existing content
+            cartContainer.appendChild(cartDiv);
+        } else {
+            console.error("Cart container not found.");
+        }
+    
+        this.addRemoveEventListeners();
         return cartDiv;
     }
 
@@ -127,10 +143,10 @@ export class User {
             console.error("Cart container not found for event listeners.");
             return;
         }
-        // Attach event listener if not already attached
+        
         if (!cartContainer.getAttribute('listener')) {
             console.log("Attaching event listeners to cart container");
-            cartContainer.setAttribute('listener', 'true'); // Mark as listener attached
+            cartContainer.setAttribute('listener', 'true'); 
     
             cartContainer.addEventListener('click', event => {
                 const target = event.target as HTMLElement;
@@ -166,8 +182,7 @@ export class User {
         if (cartContainer) {
             cartContainer.innerHTML = '';
             cartContainer.appendChild(newCartDisplay);
-            this.addRemoveEventListeners();  // Reattach event listeners
-        } else {
+            this.addRemoveEventListeners();  
             console.error("Failed to find cart container for refreshing");
         }
     }
