@@ -4,9 +4,9 @@ import { Shop } from './shop';
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    const shop = new Shop();  // Assuming Shop class is correctly imported in bundle.js
-    shop.showItems();  // This should setup the items display
-    // shop.updateCart(); might be called inside showItems or after a user event
+    const shop = new Shop();  
+    shop.showItems();  
+
 });
 
 

@@ -112,16 +112,16 @@ export class User {
             cartDiv.appendChild(itemDiv);
         });
     
-        // Add a div to display the cart total
+        
         const totalDiv = document.createElement('div');
         totalDiv.className = "cart-total";
         totalDiv.textContent = `Total: $${this.cartTotal().toFixed(2)}`;
         cartDiv.appendChild(totalDiv);
     
-        // Update the cart element in the DOM
+       
         const cartContainer = document.querySelector('#cart');
         if (cartContainer) {
-            cartContainer.innerHTML = '';  // Clear existing content
+            cartContainer.innerHTML = '';  
             cartContainer.appendChild(cartDiv);
         } else {
             console.error("Cart container not found.");
