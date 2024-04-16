@@ -1,26 +1,24 @@
-import { User } from './user';
-import { Shop } from './shop';
+import './main.css'; 
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import { Shop } from './shop'; 
 
-const shop = new Shop();
-const user = new User("Alice", 28);
 
-console.log("Initial cart:");
-user.printCart();
+document.addEventListener('DOMContentLoaded', () => {
+    const shop = new Shop();  // Assuming Shop class is correctly imported in bundle.js
+    shop.showItems();  // This should setup the items display
+    // shop.updateCart(); might be called inside showItems or after a user event
+});
 
-console.log("Adding items to cart...");
-shop.getItems().forEach(item => user.addToCart(item));
-user.printCart();
 
-console.log("Removing 'Coffee Mug' from cart...");
-const coffeeMug = shop.getItems().find(item => item.getName() === "Coffee Mug");
-if (coffeeMug) {
-    user.removeFromCart(coffeeMug);
+const loginButton = document.querySelector('.loginbutton'); 
+if (loginButton) {
+    loginButton.addEventListener('click', (event) => {
+        if (event) {
+            Shop.loginUser(event);
+        } else {
+            console.error('Event is undefined');
+        }
+    });
+} else {
+    console.error('Login button not found');
 }
-user.printCart();
-
-console.log("Removing one 'Notebook' from cart...");
-const notebook = shop.getItems().find(item => item.getName() === "Notebook");
-if (notebook) {
-    user.removeQuantityFromCart(notebook, 1);
-}
-user.printCart();

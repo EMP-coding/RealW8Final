@@ -8,7 +8,7 @@ export class User {
     private cart: Item[];
 
     constructor(name: string, age: number) {
-        this.id = uuidv4();
+        this.id = uuidv4();  // Unique ID for each user
         this.name = name;
         this.age = age;
         this.cart = [];
@@ -21,6 +21,7 @@ export class User {
     getName(): string {
         return this.name;
     }
+
     setName(value: string) {
         this.name = value;
     }
@@ -28,6 +29,7 @@ export class User {
     getAge(): number {
         return this.age;
     }
+
     setAge(value: number) {
         this.age = value;
     }
@@ -37,24 +39,38 @@ export class User {
     }
 
     addToCart(item: Item): void {
-        this.cart.push(item);
-    }
-
-    removeFromCart(item: Item): void {
-        this.cart = this.cart.filter(cartItem => cartItem.getId() !== item.getId());
-    }
-
-    removeQuantityFromCart(item: Item, quantity: number): void {
-        const filteredCart: Item[] = [];
-        let countToRemove = quantity;
-        for (const cartItem of this.cart) {
-            if (cartItem.getId() === item.getId() && countToRemove > 0) {
-                countToRemove--;
-            } else {
-                filteredCart.push(cartItem);
-            }
+        const existingItem = this.cart.find(cartItem => cartItem.getId() === item.getId());
+        if (existingItem) {
+            existingItem.incrementQuantity();
+        } else {
+            
+            this.cart.push(item);
         }
-        this.cart = filteredCart;
+    }
+
+    removeFromCart(itemId: string): void {
+        this.cart = this.cart.filter(item => item.getId() !== itemId);
+    }
+
+    removeQuantityFromCart(itemId: string, quantity: number): void {
+        console.log(`Attempting to remove ${quantity} from item ID ${itemId}`);
+        this.cart = this.cart.reduce((newCart: Item[], item) => {
+            if (item.getId() === itemId) {
+                if (item.getQuantity() > quantity) {
+                    item.setQuantity(item.getQuantity() - quantity);
+                    newCart.push(item);
+                    console.log(`Decremented quantity. New quantity: ${item.getQuantity()}`);
+                } else {
+                    console.log(`Removing item as quantity is not greater than ${quantity}`);
+                    // Do not push the item if it needs to be removed entirely
+                }
+            } else {
+                newCart.push(item); // Keep all other items as is
+            }
+            return newCart;
+        }, []);
+    
+        console.log("Cart after removal:", this.cart);
     }
 
     cartTotal(): number {
@@ -67,5 +83,92 @@ export class User {
             console.log(`Item: ${item.getName()} | Price: $${item.getPrice()}`);
         });
         console.log(`${'='.repeat(50)}\nTotal: $${this.cartTotal().toFixed(2)}\n${'='.repeat(50)}`);
+    }
+
+    static loginUser(): User {
+        const nameInput = document.getElementById('nameInput') as HTMLInputElement;
+        const ageInput = document.getElementById('ageInput') as HTMLInputElement;
+
+        if (!nameInput.value) {
+            throw new Error("'Name' is a required input field, please enter your name");
+        }
+        if (!ageInput.value) {
+            throw new Error("'Age' is a required input field, please enter your age");
+        }
+        return new User(nameInput.value, parseInt(ageInput.value));
+    }
+
+    cartHTMLElement(): HTMLDivElement {
+        const cartDiv = document.createElement('div');
+        cartDiv.className = "cart-items";
+        this.cart.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = "cart-item";
+            itemDiv.innerHTML = `<span>${item.getName()} (Quantity: ${item.getQuantity()}) - </span>
+                                <span>Price: $${item.getPrice().toFixed(2)}</span>
+                                <button class='remove-one-button' data-item-id='${item.getId()}'>Remove One</button>
+                                <button class='remove-all-button' data-item-id='${item.getId()}'>Remove All</button>`;
+            cartDiv.appendChild(itemDiv);
+        });
+        document.querySelector('#cart')?.appendChild(cartDiv); // Ensure it appends to the correct place
+        this.addRemoveEventListeners(); // Add listeners immediately after rendering the cart
+        return cartDiv;
+    }
+
+    initializeEventListeners(): void {
+        document.addEventListener('DOMContentLoaded', () => {
+            this.addRemoveEventListeners();
+        });
+    }
+    
+    addRemoveEventListeners(): void {
+        const cartContainer = document.getElementById('cart');
+        if (!cartContainer) {
+            console.error("Cart container not found for event listeners.");
+            return;
+        }
+        // Attach event listener if not already attached
+        if (!cartContainer.getAttribute('listener')) {
+            console.log("Attaching event listeners to cart container");
+            cartContainer.setAttribute('listener', 'true'); // Mark as listener attached
+    
+            cartContainer.addEventListener('click', event => {
+                const target = event.target as HTMLElement;
+                console.log("Clicked inside cart container", target);
+    
+                if (target && target.matches('.remove-one-button')) {
+                    const itemId = target.dataset.itemId;
+                    console.log("Remove one button clicked, Item ID:", itemId);
+                    if (itemId) {
+                        this.removeQuantityFromCart(itemId, 1);
+                        this.refreshCartDisplay();
+                    }
+                } else if (target && target.matches('.remove-all-button')) {
+                    const itemId = target.dataset.itemId;
+                    console.log("Remove all button clicked, Item ID:", itemId);
+                    if (itemId) {
+                        this.removeFromCart(itemId);
+                        this.refreshCartDisplay();
+                    }
+                }
+            });
+        } else {
+            console.log("Event listeners already attached to cart container");
+        }
+    }
+
+    
+
+    refreshCartDisplay(): void {
+        console.log("Refreshing cart display");
+        const newCartDisplay = this.cartHTMLElement();
+        const cartContainer = document.getElementById('cart');
+        if (cartContainer) {
+            cartContainer.innerHTML = '';
+            cartContainer.appendChild(newCartDisplay);
+            this.addRemoveEventListeners();  // Reattach event listeners
+        } else {
+            console.error("Failed to find cart container for refreshing");
+        }
     }
 }
